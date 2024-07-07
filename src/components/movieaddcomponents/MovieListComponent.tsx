@@ -38,7 +38,7 @@ const StyledListItem = styled.li`
 
 const MovieTitle = styled.div`
   font-size: 0.85em;
-  font-weight: bold;
+  font-weight: 500;
   margin-bottom: 2px;
 `;
 
