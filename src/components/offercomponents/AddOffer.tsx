@@ -3,17 +3,6 @@ import styled from "styled-components";
 import Swal from "sweetalert2";
 import { v4 as uuidv4 } from "uuid";
 
-const FormContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 20px;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #fff;
-`;
-
 const Select = styled.select`
   margin: 10px 0;
   padding: 10px;

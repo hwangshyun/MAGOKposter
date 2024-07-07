@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { SavedMovie } from "../pages/MovieAdd";
-
+import { SavedMovie } from "../../types/types";
 const Container = styled.div`
   display: flex;
   align-items: center;
