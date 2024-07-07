@@ -8,6 +8,7 @@ interface SavedMovie {
   date: string;
   status: string;
 }
+
 const CenterSection = styled.div`
   justify-content: center;
   /* background-color: green; */
@@ -91,20 +92,22 @@ const PosterLocation = styled.div`
   align-items: center;
 `;
 
-const StyledInput = styled.input`
+const StyledInput = styled.input<{ isDoubleClicked: boolean; isAssigned: boolean }>`
   margin-left: 5px;
   width: 130px;
   padding: 4px;
-  background-color: #ffffffe6;
+  background-color: ${({ isDoubleClicked, isAssigned }) => 
+    isAssigned ? 'yellow' : isDoubleClicked ? 'orange' : '#ffffffe6'};
   border: 1px solid #0000009d;
   border-radius: 5px;
   text-align: center;
+  font-weight: ${({ isDoubleClicked }) => (isDoubleClicked ? 'bold' : 'normal')};
 `;
 
 const StyledButton = styled.button`
   background-color: #000000ad;
   border-radius: 5px;
-  border: 1px, solid, #ffffffb2;
+  border: 1px solid #ffffffb2;
   padding: 8px;
   margin: 3px;
   margin-bottom: 10px;
@@ -119,45 +122,44 @@ const StyledButton = styled.button`
   }
 `;
 
-const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({
-  savedMovies,
-}) => {
+const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({ savedMovies }) => {
   const [ratings, setRatings] = useState<{ [id: string]: number }>(() => {
     const storedRatings = localStorage.getItem("ratings");
     return storedRatings ? JSON.parse(storedRatings) : {};
   });
 
-  const [nowShowingInputValues, setNowShowingInputValues] = useState<{
-    [key: string]: string;
-  }>(() => {
+  const [nowShowingInputValues, setNowShowingInputValues] = useState<{ [key: string]: string }>(() => {
     const storedValues = localStorage.getItem("nowShowingInputValues");
     return storedValues ? JSON.parse(storedValues) : {};
   });
 
-  const [upcomingInputValues, setUpcomingInputValues] = useState<{
-    [key: string]: string;
-  }>(() => {
+  const [upcomingInputValues, setUpcomingInputValues] = useState<{ [key: string]: string }>(() => {
     const storedValues = localStorage.getItem("upcomingInputValues");
     return storedValues ? JSON.parse(storedValues) : {};
   });
+
+  const [doubleClickedInputs, setDoubleClickedInputs] = useState<{ [key: string]: boolean }>(() => {
+    const storedValues = localStorage.getItem("doubleClickedInputs");
+    return storedValues ? JSON.parse(storedValues) : {};
+  });
+
+  const [assignedInputs, setAssignedInputs] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     localStorage.setItem("ratings", JSON.stringify(ratings));
   }, [ratings]);
 
   useEffect(() => {
-    localStorage.setItem(
-      "nowShowingInputValues",
-      JSON.stringify(nowShowingInputValues)
-    );
+    localStorage.setItem("nowShowingInputValues", JSON.stringify(nowShowingInputValues));
   }, [nowShowingInputValues]);
 
   useEffect(() => {
-    localStorage.setItem(
-      "upcomingInputValues",
-      JSON.stringify(upcomingInputValues)
-    );
+    localStorage.setItem("upcomingInputValues", JSON.stringify(upcomingInputValues));
   }, [upcomingInputValues]);
+
+  useEffect(() => {
+    localStorage.setItem("doubleClickedInputs", JSON.stringify(doubleClickedInputs));
+  }, [doubleClickedInputs]);
 
   const handleRating = (id: string, rating: number) => {
     setRatings({ ...ratings, [id]: rating });
@@ -183,11 +185,7 @@ const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({
     return stars;
   };
 
-  const handleInputChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    key: string,
-    type: string
-  ) => {
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>, key: string, type: string) => {
     if (type === "nowShowing") {
       setNowShowingInputValues({
         ...nowShowingInputValues,
@@ -201,45 +199,52 @@ const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({
     }
   };
 
+  const handleInputDoubleClick = (key: string) => {
+    setDoubleClickedInputs((prevState) => {
+      const newState = { ...prevState, [key]: !prevState[key] };
+      localStorage.setItem("doubleClickedInputs", JSON.stringify(newState));
+      return newState;
+    });
+  };
+
   const handleButtonClick = (status: string, type: string) => {
     const movies = savedMovies
       .filter((movie) => movie.status === status)
       .sort((a, b) => (ratings[b.id] || 0) - (ratings[a.id] || 0));
 
-    const newInputValues =
-      type === "nowShowing"
-        ? { ...nowShowingInputValues }
-        : { ...upcomingInputValues };
-    const inputIds =
-      type === "nowShowing"
-        ? [
-            "4층",
-            "4층 뒷쪽",
-            "4-6층 에스컬레이터",
-            "6층 2관옆",
-            "6층 3관 복도",
-            "6-8층 에스컬레이터",
-            "8층",
-          ]
-        : [
-            "5층 에스컬레이터 앞",
-            "1관 퇴장문 앞",
-            "사무실 앞",
-            "7층 에스컬레이터 앞",
-            "4관 퇴장문 앞",
-            "천조창고 앞",
-          ];
+    const newInputValues = type === "nowShowing" ? { ...nowShowingInputValues } : { ...upcomingInputValues };
+    const inputIds = type === "nowShowing"
+      ? [
+          "4층",
+          "4층 뒷쪽",
+          "4-6층 에스컬레이터",
+          "6층 2관옆",
+          "6층 3관 복도",
+          "6-8층 에스컬레이터",
+          "8층",
+        ]
+      : [
+          "5층 에스컬레이터 앞",
+          "1관 퇴장문 앞",
+          "사무실 앞",
+          "7층 에스컬레이터 앞",
+          "4관 퇴장문 앞",
+          "천조창고 앞",
+        ];
 
     const movieCounts: { [title: string]: number } = {};
     movies.forEach((movie) => {
       movieCounts[movie.title] = Number(movie.count);
     });
 
+    const newAssignedInputs: { [key: string]: boolean } = {};
+
     inputIds.forEach((inputId) => {
       const lineMovies: Set<string> = new Set();
 
       for (let i = 0; i < 3; i++) {
-        if (newInputValues[`${inputId}-${i}`]) {
+        const inputKey = `${inputId}-${i}`;
+        if (newInputValues[inputKey]) {
           // 이미 값이 있으면 넘어감
           continue;
         }
@@ -249,7 +254,8 @@ const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({
         for (const movie of movies) {
           if (movieCounts[movie.title] > 0 && !lineMovies.has(movie.title)) {
             lineMovies.add(movie.title);
-            newInputValues[`${inputId}-${i}`] = movie.title;
+            newInputValues[inputKey] = movie.title;
+            newAssignedInputs[inputKey] = true;
             movieCounts[movie.title] -= 1;
             movieAssigned = true;
             break;
@@ -265,37 +271,47 @@ const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({
     } else {
       setUpcomingInputValues(newInputValues);
     }
+    setAssignedInputs(newAssignedInputs);
   };
 
   const handleClearInputs = (type: string) => {
     if (type === "nowShowing") {
       setNowShowingInputValues({});
-      localStorage.removeItem("nowShowingInputValues");
+      setDoubleClickedInputs((prevState) => {
+        const updatedState = { ...prevState };
+        Object.keys(nowShowingInputValues).forEach(key => {
+          updatedState[key] = false;
+        });
+        localStorage.removeItem("nowShowingInputValues");
+        localStorage.setItem("doubleClickedInputs", JSON.stringify(updatedState));
+        return updatedState;
+      });
     } else {
       setUpcomingInputValues({});
-      localStorage.removeItem("upcomingInputValues");
+      setDoubleClickedInputs((prevState) => {
+        const updatedState = { ...prevState };
+        Object.keys(upcomingInputValues).forEach(key => {
+          updatedState[key] = false;
+        });
+        localStorage.removeItem("upcomingInputValues");
+        localStorage.setItem("doubleClickedInputs", JSON.stringify(updatedState));
+        return updatedState;
+      });
     }
+    setAssignedInputs({});
   };
 
   const handleSaveDefaults = (type: string) => {
     if (type === "nowShowing") {
-      localStorage.setItem(
-        "defaultNowShowingInputValues",
-        JSON.stringify(nowShowingInputValues)
-      );
+      localStorage.setItem("defaultNowShowingInputValues", JSON.stringify(nowShowingInputValues));
     } else {
-      localStorage.setItem(
-        "defaultUpcomingInputValues",
-        JSON.stringify(upcomingInputValues)
-      );
+      localStorage.setItem("defaultUpcomingInputValues", JSON.stringify(upcomingInputValues));
     }
   };
 
   const handleLoadDefaults = (type: string) => {
     if (type === "nowShowing") {
-      const storedDefaults = localStorage.getItem(
-        "defaultNowShowingInputValues"
-      );
+      const storedDefaults = localStorage.getItem("defaultNowShowingInputValues");
       if (storedDefaults) {
         setNowShowingInputValues(JSON.parse(storedDefaults));
       }
@@ -312,14 +328,14 @@ const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({
       <AllSection>
         <StyledSection>
           <StyeldComingsoon>
-            <StyledHeader >상영 예정작</StyledHeader>
+            <StyledHeader>상영 예정작</StyledHeader>
             <StyledList>
               {savedMovies
                 .filter((movie) => movie.status === "상영 예정")
                 .map((movie) => (
-                  <StyledListItem  key={movie.id}>
+                  <StyledListItem key={movie.id}>
                     <div>
-                      <MovieTitle >{movie.title}</MovieTitle>
+                      <MovieTitle>{movie.title}</MovieTitle>
                       <MovieInfo>
                         {movie.date} 개봉 <br />
                         {movie.count} 장
@@ -353,20 +369,10 @@ const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({
         <PosterLocation>
           <CenterSection>
             <StyledH2>Now Showing</StyledH2>
-            <StyledButton
-              onClick={() => handleButtonClick("상영중", "nowShowing")}
-            >
-              영화 배치
-            </StyledButton>
-            <StyledButton onClick={() => handleClearInputs("nowShowing")}>
-              비우기
-            </StyledButton>
-            <StyledButton onClick={() => handleSaveDefaults("nowShowing")}>
-              저장하기
-            </StyledButton>
-            <StyledButton onClick={() => handleLoadDefaults("nowShowing")}>
-              불러오기
-            </StyledButton>
+            <StyledButton onClick={() => handleButtonClick("상영중", "nowShowing")}>영화 배치</StyledButton>
+            <StyledButton onClick={() => handleClearInputs("nowShowing")}>비우기</StyledButton>
+            <StyledButton onClick={() => handleSaveDefaults("nowShowing")}>저장하기</StyledButton>
+            <StyledButton onClick={() => handleLoadDefaults("nowShowing")}>불러오기</StyledButton>
             <div>
               {[
                 "4층",
@@ -378,15 +384,16 @@ const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({
                 "8층",
               ].map((floor, index) => (
                 <div key={index}>
-                  <h4 style={{  margin: "5px", color:"#ffffff", fontWeight:"lighter"}}>{floor}</h4>
+                  <h4 style={{ margin: "5px", color: "#ffffff", fontWeight: "normal" }}>{floor}</h4>
                   {[0, 1, 2].map((i) => (
                     <StyledInput
                       key={i}
                       type="text"
                       value={nowShowingInputValues[`${floor}-${i}`] || ""}
-                      onChange={(e) =>
-                        handleInputChange(e, `${floor}-${i}`, "nowShowing")
-                      }
+                      onChange={(e) => handleInputChange(e, `${floor}-${i}`, "nowShowing")}
+                      onDoubleClick={() => handleInputDoubleClick(`${floor}-${i}`)}
+                      isDoubleClicked={!!doubleClickedInputs[`${floor}-${i}`]}
+                      isAssigned={!!assignedInputs[`${floor}-${i}`]}
                     />
                   ))}
                   <br />
@@ -394,20 +401,10 @@ const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({
               ))}
             </div>
             <StyledH2>Coming Soon</StyledH2>
-            <StyledButton
-              onClick={() => handleButtonClick("상영 예정", "upcoming")}
-            >
-              영화 배치
-            </StyledButton>
-            <StyledButton onClick={() => handleClearInputs("upcoming")}>
-              비우기
-            </StyledButton>
-            <StyledButton onClick={() => handleSaveDefaults("upcoming")}>
-              저장하기
-            </StyledButton>
-            <StyledButton onClick={() => handleLoadDefaults("upcoming")}>
-              불러오기
-            </StyledButton>
+            <StyledButton onClick={() => handleButtonClick("상영 예정", "upcoming")}>영화 배치</StyledButton>
+            <StyledButton onClick={() => handleClearInputs("upcoming")}>비우기</StyledButton>
+            <StyledButton onClick={() => handleSaveDefaults("upcoming")}>저장하기</StyledButton>
+            <StyledButton onClick={() => handleLoadDefaults("upcoming")}>불러오기</StyledButton>
             <div>
               {[
                 "5층 에스컬레이터 앞",
@@ -418,15 +415,16 @@ const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({
                 "천조창고 앞",
               ].map((location, index) => (
                 <div key={index}>
-                  <h4 style={{ margin: "5px",color:"#ffffff", fontWeight:"lighter"}}>{location}</h4>
+                  <h4 style={{ margin: "5px", color: "#ffffff", fontWeight: "normal" }}>{location}</h4>
                   {[0, 1, 2].map((i) => (
                     <StyledInput
                       key={i}
                       type="text"
                       value={upcomingInputValues[`${location}-${i}`] || ""}
-                      onChange={(e) =>
-                        handleInputChange(e, `${location}-${i}`, "upcoming")
-                      }
+                      onChange={(e) => handleInputChange(e, `${location}-${i}`, "upcoming")}
+                      onDoubleClick={() => handleInputDoubleClick(`${location}-${i}`)}
+                      isDoubleClicked={!!doubleClickedInputs[`${location}-${i}`]}
+                      isAssigned={!!assignedInputs[`${location}-${i}`]}
                     />
                   ))}
                   <br />
