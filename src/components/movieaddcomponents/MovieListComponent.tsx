@@ -11,7 +11,7 @@ const StyledSection = styled.div<{ $bgColor?: string }>`
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: 0.4s;
   &:hover{
-    transform:scale(1.05);
+    transform:scale(1.02);
   }
 `;
 
@@ -38,6 +38,10 @@ const StyledListItem = styled.li`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: 0.2s;
+  &:hover{
+    transform: scale(1.02);
+  }
 `;
 
 const MovieTitle = styled.div`
