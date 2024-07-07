@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {  useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 const All = styled.div`
@@ -26,7 +26,7 @@ const Pages = styled.div`
   font-size: 1.5em;
   font-weight: lighter;
   text-align: center;
-  transition: 0.5s;
+  transition: 0.8s;
   &:hover {
     transform: scale(1.5);
     background-color: #ffffff4b;
@@ -48,7 +48,7 @@ const HoverImage = styled.img<HoverImageProps>`
   border-radius: 10px;
   object-fit: cover;
   opacity: ${({ isHovered }) => (isHovered ? 1 : 0)};
-  transition: opacity 0.5s;
+  transition: opacity 1s;
   pointer-events: none; /* 이미지가 클릭되지 않도록 설정 */
 `;
 

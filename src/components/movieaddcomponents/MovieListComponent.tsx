@@ -9,6 +9,10 @@ const StyledSection = styled.div<{ $bgColor?: string }>`
   border-radius: 8px;
   border: 1px solid #ffffff6f;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: 0.4s;
+  &:hover{
+    transform:scale(1.1);
+  }
 `;
 
 const StyledHeader = styled.h2<{ $underlineColor?: string }>`
