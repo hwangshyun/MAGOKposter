@@ -1,4 +1,4 @@
-
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
@@ -6,9 +6,11 @@ const All = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 70vh; /* 화면의 전체 높이를 차지하도록 설정 */
+  height: 70vh;
 `;
+
 const Pages = styled.div`
+  position: relative;
   margin: 20px;
   border: 1px solid #ffffffd2;
   border-radius: 10px;
@@ -16,32 +18,61 @@ const Pages = styled.div`
   background-color: #ffffff2b;
   color: white;
   width: 20%;
-  height: 80%; /* 높이를 50%로 변경하여 더 길어지도록 설정 */
+  height: 80%;
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: pointer; /* 클릭 가능한 포인터 추가 */
-  font-size: 1.5em; /* 텍스트 크기 증가 */
+  cursor: pointer;
+  font-size: 1.5em;
   font-weight: lighter;
-  text-align: center; /* 텍스트 가운데 정렬 */
+  text-align: center;
   transition: 0.5s;
   &:hover {
-    transform: scale(1.05);
-    content: '뒤로가자';
+    transform: scale(1.5);
     background-color: #ffffff4b;
     border: 1px solid #ffffff;
     font-size: 1.75em;
   }
 `;
-const Notice = () => {
+
+interface HoverImageProps {
+  isHovered: boolean;
+}
+
+const HoverImage = styled.img<HoverImageProps>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+  opacity: ${({ isHovered }) => (isHovered ? 1 : 0)};
+  transition: opacity 0.5s;
+  pointer-events: none; /* 이미지가 클릭되지 않도록 설정 */
+`;
+
+const Notice: React.FC = () => {
   const navigate = useNavigate();
+  const [isHovered, setIsHovered] = useState(false);
+
   const goBack = () => {
     navigate("/");
   };
+
   return (
     <All>
-      <Pages onClick={goBack}>
-        만드는중...
+      <Pages
+        onClick={goBack}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {isHovered ? "윤은경대머리깎아라" : "만드는중..."}
+        <HoverImage
+          src="../../public/file.png" // 여기에 실제 이미지 경로를 넣으세요.
+          alt="Hover Image"
+          isHovered={isHovered}
+        />
       </Pages>
     </All>
   );
