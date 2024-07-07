@@ -11,7 +11,7 @@ const StyledSection = styled.div<{ $bgColor?: string }>`
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: 0.4s;
   &:hover{
-    transform:scale(1.1);
+    transform:scale(1.05);
   }
 `;
 
