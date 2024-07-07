@@ -27,7 +27,7 @@
 }
 
 body {
-  background-image: url('./assets/마곡4관.jpg');
+  background-image: url('./assets/background.jpg');
   background-size: cover;
   background-color: rgba(0, 0, 0, 0.877);
   background-blend-mode: multiply;

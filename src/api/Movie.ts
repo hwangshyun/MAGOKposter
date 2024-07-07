@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_KEY = '79417d53054d24d2503697a83a54b32b';
-const BASE_URL = 'http://www.kobis.or.kr/kobisopenapi/webservice/rest';
+const BASE_URL = 'https://www.kobis.or.kr/kobisopenapi/webservice/rest'; // HTTP에서 HTTPS로 변경
 
 export const searchMovies = async (movieNm: string, itemPerPage: number = 50) => {
   try {
