@@ -328,8 +328,7 @@ const AddOffer: React.FC = () => {
       !week ||
       !period ||
       !offerContent ||
-      methods.length === 0 ||
-      images.length === 0
+      methods.length === 0
     ) {
       Swal.fire({
         icon: "warning",
