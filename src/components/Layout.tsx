@@ -16,9 +16,14 @@ const Header = styled.header`
   color: white;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* justify-content: space-between; */
 
   border-bottom: 1px solid #65656542;
+`;
+const Headerleft = styled.div`
+  display: flex;
+  align-items: center;
+  margin-left: auto;
 `;
 
 const Footer = styled.footer`
@@ -41,7 +46,7 @@ const StyledDivDiv = styled.div`
   font-size: 1.5em;
   font-weight: bold;
   transition: 0.3s;
-  &:hover{
+  &:hover {
     transform: scale(1.05);
   }
 `;
@@ -54,8 +59,19 @@ const StyledButton = styled.button`
   cursor: pointer;
   margin-top: 5px;
   transition: 0.3s;
-  &:hover{
+  &:hover {
     transform: scale(1.5);
+  }
+`;
+const Btns = styled.div`
+  /* margin-left: 10px; */
+  margin-right: 10px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: lighter;
+  transition: 0.3s;
+  &:hover {
+    transform: scale(1.1);
   }
 `;
 
@@ -65,14 +81,31 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const gotohomeBtn = () => {
     navigate("/");
   };
-
+  const gotoposterpage = () => {
+    navigate("/poster");
+  };
+  const gotoOfferPage = () => {
+    navigate("/offer");
+  };
+  const gotoNoticePage = () => {
+    navigate("/notice");
+  };
+  const gotoBack = () => {
+    navigate(-1);
+  };
   return (
     <Container>
       <Header>
         <StyledDivDiv onClick={gotohomeBtn}>MEGABOX MAGOK</StyledDivDiv>
-        <StyledButton onClick={gotohomeBtn}>
-          <GoHome />
-        </StyledButton>
+        <Headerleft>
+          <Btns onClick={gotoBack}>뒤로가기</Btns>
+          <Btns onClick={gotoposterpage}>대국전관리</Btns>
+          <Btns onClick={gotoOfferPage}>특전관리</Btns>
+          <Btns onClick={gotoNoticePage}>크루공지</Btns>
+          <StyledButton onClick={gotohomeBtn}>
+            <GoHome />
+          </StyledButton>
+        </Headerleft>
       </Header>
       <Main>{children}</Main>
       <Footer>© 여러분 화이팅</Footer>
