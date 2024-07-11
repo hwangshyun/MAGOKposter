@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react';
 import styled from 'styled-components';
 import { supabase } from '../api/supabaseClient';
+import { useNavigate } from 'react-router-dom';
 
 const Container = styled.div`
   display: flex;
@@ -65,6 +66,7 @@ const SignUp = () => {
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleSignUp = async (event: FormEvent) => {
     event.preventDefault();
@@ -77,6 +79,7 @@ const SignUp = () => {
       setMessage(`회원가입 실패: ${error.message}`);
     } else {
       setMessage('회원가입 성공!');
+      navigate('/login'); // 회원가입 성공 후 로그인 페이지로 이동
     }
   };
 

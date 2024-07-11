@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React from "react";
 import { Route, BrowserRouter as Router, Routes, Navigate } from "react-router-dom";
 import MovieAdd from "./pages/MovieAdd";
 import PosterManager from "./pages/PosterManager";
@@ -8,14 +8,10 @@ import OfferList from "./pages/MainOfferList";
 import Mainpage from "./pages/Mainpage";
 import Notice from "./pages/Notice";
 import Login from "./pages/Login";
-import SignUp from "./pages/Signup";
+import SignUp from "./pages/Signup"; // Import the correct Signup component
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
-interface PrivateRouteProps {
-  children: ReactNode;
-}
-
-const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
+const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   return user ? <>{children}</> : <Navigate to="/login" />;
 };
