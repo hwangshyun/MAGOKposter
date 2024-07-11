@@ -29,11 +29,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .single();
 
     if (fetchError) {
-      return { error: '방귀를먹으세요 참고로 아이디틀림' };
+      return { error: '아이디를 틀렸어요. 방귀를먹으세요' };
     }
 
     if (user.password !== password) {
-      return { error: '반성하며 춤을 추세요 참고로 비번틀림' };
+      return { error: '비밀번호를 틀렸어요. 반성하며 춤을 추세요' };
     }
 
     setUser(user);

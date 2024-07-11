@@ -117,15 +117,15 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <Header>
         <StyledDivDiv onClick={gotohomeBtn}>MEGABOX MAGOK</StyledDivDiv>
         <Headerleft>
-        {user && <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>}
-          <Btns onClick={gotoBack}>뒤로가기</Btns>
-          <Btns onClick={gotoposterpage}>대국전관리</Btns>
-          <Btns onClick={gotoOfferPage}>특전관리</Btns>
-          <Btns onClick={gotoNoticePage}>크루공지</Btns>
-          <StyledButton onClick={gotohomeBtn}>
+          {user && <span>{user.nickname}</span>}
+          {user && <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>}
+         {user && <Btns onClick={gotoBack}>뒤로가기</Btns>}
+         {user && <Btns onClick={gotoposterpage}>대국전관리</Btns>}
+          {user &&<Btns onClick={gotoOfferPage}>특전관리</Btns>}
+          {user &&<Btns onClick={gotoNoticePage}>크루공지</Btns>}
+          {user &&<StyledButton onClick={gotohomeBtn}>
             <GoHome />
-          </StyledButton>
-        {/* 로그인 상태일 때만 로그아웃 버튼을 표시 */}
+          </StyledButton>}
         </Headerleft>
       </Header>
       <Main>{children}</Main>
