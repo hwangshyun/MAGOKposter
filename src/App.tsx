@@ -1,5 +1,5 @@
-import React from "react";
-import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import React, { ReactNode } from "react";
+import { Route, BrowserRouter as Router, Routes, Navigate } from "react-router-dom";
 import MovieAdd from "./pages/MovieAdd";
 import PosterManager from "./pages/PosterManager";
 import "./App.css";
@@ -7,24 +7,71 @@ import Layout from "./components/Layout";
 import OfferList from "./pages/MainOfferList";
 import Mainpage from "./pages/Mainpage";
 import Notice from "./pages/Notice";
-const App: React.FC = () => {
-  const savedMovies = JSON.parse(localStorage.getItem("movies") || "[]");
+import Login from "./pages/Login";
+import SignUp from "./pages/Signup";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
+interface PrivateRouteProps {
+  children: ReactNode;
+}
+
+const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
+  const { user } = useAuth();
+  return user ? <>{children}</> : <Navigate to="/login" />;
+};
+
+const App: React.FC = () => {
   return (
     <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Mainpage/>}/>
-          <Route path="/poster" element={<MovieAdd />} />
-          <Route
-            path="/postermanager"
-            element={<PosterManager savedMovies={savedMovies} />}
-          />
-
-          <Route path="/offer" element={<OfferList />} />
-          <Route path="/notice" element={<Notice/>}/>
-        </Routes>
-      </Layout>
+      <AuthProvider>
+        <Layout>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/" element={<Navigate to="/login" />} />
+            <Route
+              path="/main"
+              element={
+                <PrivateRoute>
+                  <Mainpage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/poster"
+              element={
+                <PrivateRoute>
+                  <MovieAdd />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/postermanager"
+              element={
+                <PrivateRoute>
+                  <PosterManager />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/offer"
+              element={
+                <PrivateRoute>
+                  <OfferList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/notice"
+              element={
+                <PrivateRoute>
+                  <Notice />
+                </PrivateRoute>
+              }
+            />
+          </Routes>
+        </Layout>
+      </AuthProvider>
     </Router>
   );
 };

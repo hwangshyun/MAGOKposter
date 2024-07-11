@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
+import { supabase } from "../api/supabaseClient";
+import { useAuth } from "../contexts/AuthContext";
 
 interface SavedMovie {
   id: string;
@@ -7,16 +9,16 @@ interface SavedMovie {
   count: string;
   date: string;
   status: string;
+  rating: number;
+  user_id: string; // 사용자 ID 필드 추가
 }
 
 const CenterSection = styled.div`
   justify-content: center;
-  /* background-color: green; */
 `;
 
 const AllSection = styled.div`
   display: flex;
-  /* background-color: green; */
   justify-content: center;
 `;
 
@@ -79,7 +81,6 @@ const StyledH2 = styled.h2`
   font-weight: lighter;
   color: white;
   margin: 20px 0px;
-  /* background-color: white; */
 `;
 const PosterLocation = styled.div`
   width: 40%;
@@ -122,12 +123,10 @@ const StyledButton = styled.button`
   }
 `;
 
-const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({ savedMovies }) => {
-  const [ratings, setRatings] = useState<{ [id: string]: number }>(() => {
-    const storedRatings = localStorage.getItem("ratings");
-    return storedRatings ? JSON.parse(storedRatings) : {};
-  });
-
+const PosterManager: React.FC = () => {
+  const { user } = useAuth(); // 현재 로그인된 사용자 정보 가져오기
+  const [savedMovies, setSavedMovies] = useState<SavedMovie[]>([]);
+  const [ratings, setRatings] = useState<{ [id: string]: number }>({});
   const [nowShowingInputValues, setNowShowingInputValues] = useState<{ [key: string]: string }>(() => {
     const storedValues = localStorage.getItem("nowShowingInputValues");
     return storedValues ? JSON.parse(storedValues) : {};
@@ -146,6 +145,12 @@ const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({ savedMovies })
   const [assignedInputs, setAssignedInputs] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
+    if (user) {
+      fetchSavedMovies(user.id);
+    }
+  }, [user]);
+
+  useEffect(() => {
     localStorage.setItem("ratings", JSON.stringify(ratings));
   }, [ratings]);
 
@@ -161,8 +166,32 @@ const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({ savedMovies })
     localStorage.setItem("doubleClickedInputs", JSON.stringify(doubleClickedInputs));
   }, [doubleClickedInputs]);
 
-  const handleRating = (id: string, rating: number) => {
+  const fetchSavedMovies = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("movies")
+      .select("*")
+      .eq("user_id", userId);
+    if (error) {
+      console.error("Error fetching movies:", error);
+    } else {
+      setSavedMovies(data);
+      const initialRatings: { [id: string]: number } = {};
+      data.forEach((movie) => {
+        initialRatings[movie.id] = movie.rating || 0;
+      });
+      setRatings(initialRatings);
+    }
+  };
+
+  const handleRating = async (id: string, rating: number) => {
     setRatings({ ...ratings, [id]: rating });
+    const { error } = await supabase
+      .from("movies")
+      .update({ rating })
+      .eq("id", id);
+    if (error) {
+      console.error("Error updating rating:", error);
+    }
   };
 
   const renderRatingStars = (id: string) => {
@@ -279,7 +308,7 @@ const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({ savedMovies })
       setNowShowingInputValues({});
       setDoubleClickedInputs((prevState) => {
         const updatedState = { ...prevState };
-        Object.keys(nowShowingInputValues).forEach(key => {
+        Object.keys(nowShowingInputValues).forEach((key) => {
           updatedState[key] = false;
         });
         localStorage.removeItem("nowShowingInputValues");
@@ -290,7 +319,7 @@ const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({ savedMovies })
       setUpcomingInputValues({});
       setDoubleClickedInputs((prevState) => {
         const updatedState = { ...prevState };
-        Object.keys(upcomingInputValues).forEach(key => {
+        Object.keys(upcomingInputValues).forEach((key) => {
           updatedState[key] = false;
         });
         localStorage.removeItem("upcomingInputValues");
@@ -304,8 +333,10 @@ const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({ savedMovies })
   const handleSaveDefaults = (type: string) => {
     if (type === "nowShowing") {
       localStorage.setItem("defaultNowShowingInputValues", JSON.stringify(nowShowingInputValues));
+      localStorage.setItem("defaultDoubleClickedInputsNowShowing", JSON.stringify(doubleClickedInputs));
     } else {
       localStorage.setItem("defaultUpcomingInputValues", JSON.stringify(upcomingInputValues));
+      localStorage.setItem("defaultDoubleClickedInputsUpcoming", JSON.stringify(doubleClickedInputs));
     }
   };
 
@@ -315,10 +346,18 @@ const PosterManager: React.FC<{ savedMovies: SavedMovie[] }> = ({ savedMovies })
       if (storedDefaults) {
         setNowShowingInputValues(JSON.parse(storedDefaults));
       }
+      const storedDoubleClicked = localStorage.getItem("defaultDoubleClickedInputsNowShowing");
+      if (storedDoubleClicked) {
+        setDoubleClickedInputs(JSON.parse(storedDoubleClicked));
+      }
     } else {
       const storedDefaults = localStorage.getItem("defaultUpcomingInputValues");
       if (storedDefaults) {
         setUpcomingInputValues(JSON.parse(storedDefaults));
+      }
+      const storedDoubleClicked = localStorage.getItem("defaultDoubleClickedInputsUpcoming");
+      if (storedDoubleClicked) {
+        setDoubleClickedInputs(JSON.parse(storedDoubleClicked));
       }
     }
   };

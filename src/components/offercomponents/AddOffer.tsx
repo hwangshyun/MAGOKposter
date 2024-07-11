@@ -2,6 +2,8 @@ import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import styled from "styled-components";
 import Swal from "sweetalert2";
 import { v4 as uuidv4 } from "uuid";
+import { supabase } from "../../api/supabaseClient";
+import { useAuth } from "../../contexts/AuthContext"; // AuthContext에서 사용자 정보를 가져옵니다.
 
 const Select = styled.select`
   margin: 10px 0;
@@ -229,9 +231,11 @@ interface Offer {
   content: string;
   methods: { text: string; highlighted: boolean }[];
   images: string[];
+  user_id: string; // 사용자 ID 추가
 }
 
 const AddOffer: React.FC = () => {
+  const { user } = useAuth(); // 로그인된 사용자 정보를 가져옵니다.
   const [movies, setMovies] = useState<SavedMovie[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<string>("");
   const [week, setWeek] = useState<string>("");
@@ -241,10 +245,7 @@ const AddOffer: React.FC = () => {
   const [methods, setMethods] = useState<
     { text: string; highlighted: boolean }[]
   >([]);
-  const [offers, setOffers] = useState<Offer[]>(() => {
-    const savedOffers = localStorage.getItem("offers");
-    return savedOffers ? JSON.parse(savedOffers) : [];
-  });
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentEditIndex, setCurrentEditIndex] = useState<string | null>(null);
@@ -252,15 +253,27 @@ const AddOffer: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   useEffect(() => {
-    const savedMovies = localStorage.getItem("movies");
-    if (savedMovies) {
-      setMovies(JSON.parse(savedMovies));
-    }
-  }, []);
+    const fetchMovies = async () => {
+      const { data, error } = await supabase.from("movies").select("*").eq("user_id", user.id);
+      if (error) {
+        console.error("Error fetching movies:", error);
+      } else {
+        setMovies(data);
+      }
+    };
 
-  useEffect(() => {
-    localStorage.setItem("offers", JSON.stringify(offers));
-  }, [offers]);
+    const fetchOffers = async () => {
+      const { data, error } = await supabase.from("offers").select("*").eq("user_id", user.id);
+      if (error) {
+        console.error("Error fetching offers:", error);
+      } else {
+        setOffers(data);
+      }
+    };
+
+    fetchMovies();
+    fetchOffers();
+  }, [user.id]);
 
   const handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSelectedMovie(e.target.value);
@@ -321,7 +334,7 @@ const AddOffer: React.FC = () => {
     setImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (
       !selectedMovie ||
@@ -347,9 +360,18 @@ const AddOffer: React.FC = () => {
       content: offerContent,
       methods,
       images,
+      user_id: user.id, // 사용자 ID를 추가합니다.
     };
 
     if (isEditMode && currentEditIndex) {
+      const { error } = await supabase
+        .from("offers")
+        .update(newOffer)
+        .eq("id", currentEditIndex);
+      if (error) {
+        console.error("Error updating offer:", error);
+        return;
+      }
       setOffers((prevOffers) =>
         prevOffers.map((offer) =>
           offer.id === currentEditIndex ? newOffer : offer
@@ -358,6 +380,11 @@ const AddOffer: React.FC = () => {
       setIsEditMode(false);
       setCurrentEditIndex(null);
     } else {
+      const { error } = await supabase.from("offers").insert([newOffer]);
+      if (error) {
+        console.error("Error inserting offer:", error);
+        return;
+      }
       setOffers((prevOffers) => [...prevOffers, newOffer]);
     }
 
@@ -385,7 +412,12 @@ const AddOffer: React.FC = () => {
     }
   };
 
-  const handleDeleteOffer = (id: string) => {
+  const handleDeleteOffer = async (id: string) => {
+    const { error } = await supabase.from("offers").delete().eq("id", id);
+    if (error) {
+      console.error("Error deleting offer:", error);
+      return;
+    }
     setOffers((prevOffers) => prevOffers.filter((offer) => offer.id !== id));
   };
 

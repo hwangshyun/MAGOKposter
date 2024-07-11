@@ -2,6 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { GoHome } from "react-icons/go";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext"; // AuthContext에서 useAuth 훅을 가져옵니다.
 
 const Container = styled.div`
   display: flex;
@@ -16,10 +17,9 @@ const Header = styled.header`
   color: white;
   display: flex;
   align-items: center;
-  /* justify-content: space-between; */
-
   border-bottom: 1px solid #65656542;
 `;
+
 const Headerleft = styled.div`
   display: flex;
   align-items: center;
@@ -63,8 +63,8 @@ const StyledButton = styled.button`
     transform: scale(1.5);
   }
 `;
+
 const Btns = styled.div`
-  /* margin-left: 10px; */
   margin-right: 10px;
   cursor: pointer;
   font-size: 0.8rem;
@@ -75,11 +75,25 @@ const Btns = styled.div`
   }
 `;
 
+const LogoutButton = styled.button`
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 0.8rem;
+  margin-left: 20px;
+  transition: 0.3s;
+  &:hover {
+    transform: scale(1.1);
+  }
+`;
+
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth(); // useAuth 훅에서 user와 logout 함수를 가져옵니다.
 
   const gotohomeBtn = () => {
-    navigate("/");
+    navigate("/main");
   };
   const gotoposterpage = () => {
     navigate("/poster");
@@ -93,11 +107,17 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const gotoBack = () => {
     navigate(-1);
   };
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
+
   return (
     <Container>
       <Header>
         <StyledDivDiv onClick={gotohomeBtn}>MEGABOX MAGOK</StyledDivDiv>
         <Headerleft>
+        {user && <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>}
           <Btns onClick={gotoBack}>뒤로가기</Btns>
           <Btns onClick={gotoposterpage}>대국전관리</Btns>
           <Btns onClick={gotoOfferPage}>특전관리</Btns>
@@ -105,6 +125,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           <StyledButton onClick={gotohomeBtn}>
             <GoHome />
           </StyledButton>
+        {/* 로그인 상태일 때만 로그아웃 버튼을 표시 */}
         </Headerleft>
       </Header>
       <Main>{children}</Main>

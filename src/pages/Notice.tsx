@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import {  useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 const All = styled.div`
@@ -57,7 +57,7 @@ const Notice: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
 
   const goBack = () => {
-    navigate("/");
+    navigate('/main');
   };
 
   return (

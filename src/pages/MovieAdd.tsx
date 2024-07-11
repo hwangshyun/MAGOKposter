@@ -4,14 +4,15 @@ import { searchMovies, getMovieInfo } from "../api/Movie";
 import FormComponent from "../components/movieaddcomponents/FormComponent";
 import ModalComponent from "../components/movieaddcomponents/ModalComponent";
 import MovieListComponent from "../components/movieaddcomponents/MovieListComponent";
-// import CurrentShowing from "../components/CurrentShowing";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 import Swal from 'sweetalert2';
+import { supabase } from "../api/supabaseClient";
+import { useAuth } from "../contexts/AuthContext";
 
 const All = styled.div`
   z-index: 5;
-`
+`;
 
 const StyledDiv = styled.div`
   display: flex;
@@ -54,6 +55,7 @@ interface SavedMovie {
   count: string;
   date: string;
   status: string;
+  user_id: string;
 }
 
 const MovieAdd: React.FC = () => {
@@ -62,15 +64,23 @@ const MovieAdd: React.FC = () => {
   const [title, setTitle] = useState("");
   const [count, setCount] = useState("");
   const [date, setDate] = useState("");
-  const [savedMovies, setSavedMovies] = useState<SavedMovie[]>(() => {
-    const saved = localStorage.getItem("movies");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [savedMovies, setSavedMovies] = useState<SavedMovie[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
-    localStorage.setItem("movies", JSON.stringify(savedMovies));
-  }, [savedMovies]);
+    fetchSavedMovies();
+  }, [user]);
+
+  const fetchSavedMovies = async () => {
+    if (!user) return;
+    const { data, error } = await supabase.from("movies").select("*").eq('user_id', user.id);
+    if (error) {
+      console.error("Error fetching movies:", error);
+    } else {
+      setSavedMovies(sortMoviesByDate(data));
+    }
+  };
 
   const sortMoviesByDate = (movies: SavedMovie[]) => {
     return movies
@@ -91,8 +101,6 @@ const MovieAdd: React.FC = () => {
 
     try {
       const data = await searchMovies(movieName, 100);
-      console.log(data);
-      console.log(movies);
       setMovies(data.movieListResult.movieList);
       setIsModalOpen(true);
     } catch (error) {
@@ -103,7 +111,6 @@ const MovieAdd: React.FC = () => {
   const fetchMovieInfo = async (movieCd: string) => {
     try {
       const data = await getMovieInfo(movieCd);
-      console.log(data);
       setTitle(data.movieInfoResult.movieInfo.movieNm);
       setDate(data.movieInfoResult.movieInfo.openDt);
       setIsModalOpen(false);
@@ -124,7 +131,7 @@ const MovieAdd: React.FC = () => {
     setDate(e.target.value);
   };
 
-  const addMovie = (event: FormEvent) => {
+  const addMovie = async (event: FormEvent) => {
     event.preventDefault();
 
     if (!title || !count || !date) {
@@ -156,24 +163,37 @@ const MovieAdd: React.FC = () => {
       count: count,
       date: date,
       status: "상영 예정",
+      user_id: user.id,
     };
-    const updatedMovies = [...savedMovies, newMovie];
-    setSavedMovies(sortMoviesByDate(updatedMovies));
+
+    const { error } = await supabase.from("movies").insert(newMovie);
+    if (error) {
+      console.error("Error inserting movie:", error);
+    } else {
+      fetchSavedMovies();
+    }
+
     setTitle("");
     setCount("");
     setDate("");
   };
 
-  const updateMovieStatus = (id: string, status: string) => {
-    const updatedMovies = savedMovies.map((movie) =>
-      movie.id === id ? { ...movie, status: status } : movie
-    );
-    setSavedMovies(sortMoviesByDate(updatedMovies));
+  const updateMovieStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from("movies").update({ status }).eq("id", id);
+    if (error) {
+      console.error("Error updating movie status:", error);
+    } else {
+      fetchSavedMovies();
+    }
   };
 
-  const deleteMovie = (id: string) => {
-    const updatedMovies = savedMovies.filter((movie) => movie.id !== id);
-    setSavedMovies(sortMoviesByDate(updatedMovies));
+  const deleteMovie = async (id: string) => {
+    const { error } = await supabase.from("movies").delete().eq("id", id);
+    if (error) {
+      console.error("Error deleting movie:", error);
+    } else {
+      fetchSavedMovies();
+    }
   };
 
   return (
@@ -191,7 +211,6 @@ const MovieAdd: React.FC = () => {
           dateInput={dateInput}
           addMovie={addMovie}
         />
-        {/* <CurrentShowing  movies={savedMovies.filter(movie => movie.status === "상영중")} /> */}
         <ButtonContainer>
           <Link to="/postermanager">
             <StyledButton>대국전관리</StyledButton>
