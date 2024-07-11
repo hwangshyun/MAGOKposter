@@ -8,7 +8,8 @@ import OfferList from "./pages/MainOfferList";
 import Mainpage from "./pages/Mainpage";
 import Notice from "./pages/Notice";
 import Login from "./pages/Login";
-import SignUp from "./pages/Signup"; // Import the correct Signup component
+import SignUp from "./pages/Signup"; // 정확한 파일명을 사용
+
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
