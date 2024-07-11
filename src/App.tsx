@@ -8,7 +8,7 @@ import OfferList from "./pages/MainOfferList";
 import Mainpage from "./pages/Mainpage";
 import Notice from "./pages/Notice";
 import Login from "./pages/Login";
-import SignUp from "./pages/Signup"; // 정확한 파일명을 사용
+// import SignUp from "./pages/Signup"; // 정확한 파일명을 사용
 
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
@@ -24,7 +24,6 @@ const App: React.FC = () => {
         <Layout>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
             <Route path="/" element={<Navigate to="/login" />} />
             <Route
               path="/main"
