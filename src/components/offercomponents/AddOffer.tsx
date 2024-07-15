@@ -1,9 +1,10 @@
-import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
+import React, { useState, ChangeEvent, FormEvent } from "react";
 import styled from "styled-components";
 import Swal from "sweetalert2";
 import { v4 as uuidv4 } from "uuid";
+import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { supabase } from "../../api/supabaseClient";
-import { useAuth } from "../../contexts/AuthContext"; // AuthContext에서 사용자 정보를 가져옵니다.
+import { useAuth } from "../../contexts/AuthContext";
 
 const Select = styled.select`
   margin: 10px 0;
@@ -37,21 +38,25 @@ const Button = styled.button`
 `;
 
 const OfferListContainer = styled.div`
-  margin-top: 20px;
+  margin-top: 10px;
   width: 100%;
 `;
 
 const OfferItem = styled.div`
-  margin: 10px 0;
-  padding: 10px;
+  margin: 10px 0px;
+  padding: 8px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 5px;
   background-color: #f9f9f9f8;
   display: flex;
 `;
 
-const StyledTitle = styled.h3`
-  width: 10%;
+const StyledTitle = styled.h2`
+  /* min-width: 100px; */
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-bottom: auto;
+  /* border-right: 1px solid black; */
 `;
 
 const Section = styled.div`
@@ -62,7 +67,7 @@ const Section = styled.div`
 `;
 
 const ItemSection = styled.div`
-  margin-top: 10px;
+  margin-top: 5px;
   font-size: medium;
   justify-content: center;
   display: flex;
@@ -147,19 +152,19 @@ const ImageInput = styled.input`
 `;
 
 const ImageGrid = styled.div`
-  border: 0.8px solid #00000078;
+  /* border: 0.8px solid #00000078; */
   border-radius: 8px;
-  padding: 15px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-gap: 10px;
-  margin: auto;
+  padding: 2px;
+   display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-left: 10px;
 `;
 
 const ImageBox = styled.div`
   border: 0.8px solid #00000078;
   border-radius: 8px;
-  padding: 14px;
+  padding: 5px;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -236,7 +241,84 @@ interface Offer {
 
 const AddOffer: React.FC = () => {
   const { user } = useAuth(); // 로그인된 사용자 정보를 가져옵니다.
-  const [movies, setMovies] = useState<SavedMovie[]>([]);
+  const queryClient = useQueryClient();
+
+  const { data: movies, isLoading: moviesLoading } = useQuery<SavedMovie[], Error>(
+    ["movies", user?.id],
+    async () => {
+      const { data, error } = await supabase
+        .from("movies")
+        .select("*")
+        .eq("user_id", user?.id);
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data || [];
+    }
+  );
+
+  const { data: offers, isLoading: offersLoading } = useQuery<Offer[], Error>(
+    ["offers", user?.id],
+    async () => {
+      const { data, error } = await supabase
+        .from("offers")
+        .select("*")
+        .eq("user_id", user?.id);
+      if (error) {
+        throw new Error(error.message);
+      }
+      return data || [];
+    }
+  );
+
+  const addOfferMutation = useMutation(
+    async (newOffer: Offer) => {
+      const { error } = await supabase.from("offers").insert([newOffer]);
+      if (error) {
+        throw new Error(error.message);
+      }
+      return newOffer;
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["offers", user?.id]);
+      },
+    }
+  );
+
+  const updateOfferMutation = useMutation(
+    async (updatedOffer: Offer) => {
+      const { error } = await supabase
+        .from("offers")
+        .update(updatedOffer)
+        .eq("id", updatedOffer.id);
+      if (error) {
+        throw new Error(error.message);
+      }
+      return updatedOffer;
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["offers", user?.id]);
+      },
+    }
+  );
+
+  const deleteOfferMutation = useMutation(
+    async (id: string) => {
+      const { error } = await supabase.from("offers").delete().eq("id", id);
+      if (error) {
+        throw new Error(error.message);
+      }
+      return id;
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["offers", user?.id]);
+      },
+    }
+  );
+
   const [selectedMovie, setSelectedMovie] = useState<string>("");
   const [week, setWeek] = useState<string>("");
   const [period, setPeriod] = useState<string>("");
@@ -245,35 +327,13 @@ const AddOffer: React.FC = () => {
   const [methods, setMethods] = useState<
     { text: string; highlighted: boolean }[]
   >([]);
-  const [offers, setOffers] = useState<Offer[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [currentEditIndex, setCurrentEditIndex] = useState<string | null>(null);
+  const [currentEditIndex, setCurrentEditIndex] = useState<string | null>(
+    null
+  );
   const [images, setImages] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
-
-  useEffect(() => {
-    const fetchMovies = async () => {
-      const { data, error } = await supabase.from("movies").select("*").eq("user_id", user.id);
-      if (error) {
-        console.error("Error fetching movies:", error);
-      } else {
-        setMovies(data);
-      }
-    };
-
-    const fetchOffers = async () => {
-      const { data, error } = await supabase.from("offers").select("*").eq("user_id", user.id);
-      if (error) {
-        console.error("Error fetching offers:", error);
-      } else {
-        setOffers(data);
-      }
-    };
-
-    fetchMovies();
-    fetchOffers();
-  }, [user.id]);
 
   const handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSelectedMovie(e.target.value);
@@ -360,32 +420,15 @@ const AddOffer: React.FC = () => {
       content: offerContent,
       methods,
       images,
-      user_id: user.id, // 사용자 ID를 추가합니다.
+      user_id: user?.id || "", // 사용자 ID를 추가합니다.
     };
 
     if (isEditMode && currentEditIndex) {
-      const { error } = await supabase
-        .from("offers")
-        .update(newOffer)
-        .eq("id", currentEditIndex);
-      if (error) {
-        console.error("Error updating offer:", error);
-        return;
-      }
-      setOffers((prevOffers) =>
-        prevOffers.map((offer) =>
-          offer.id === currentEditIndex ? newOffer : offer
-        )
-      );
+      updateOfferMutation.mutate(newOffer);
       setIsEditMode(false);
       setCurrentEditIndex(null);
     } else {
-      const { error } = await supabase.from("offers").insert([newOffer]);
-      if (error) {
-        console.error("Error inserting offer:", error);
-        return;
-      }
-      setOffers((prevOffers) => [...prevOffers, newOffer]);
+      addOfferMutation.mutate(newOffer);
     }
 
     setSelectedMovie("");
@@ -398,7 +441,7 @@ const AddOffer: React.FC = () => {
   };
 
   const handleEditOffer = (id: string) => {
-    const offerToEdit = offers.find((offer) => offer.id === id);
+    const offerToEdit = offers?.find((offer) => offer.id === id);
     if (offerToEdit) {
       setSelectedMovie(offerToEdit.movieId);
       setWeek(offerToEdit.week);
@@ -412,20 +455,20 @@ const AddOffer: React.FC = () => {
     }
   };
 
-  const handleDeleteOffer = async (id: string) => {
-    const { error } = await supabase.from("offers").delete().eq("id", id);
-    if (error) {
-      console.error("Error deleting offer:", error);
-      return;
-    }
-    setOffers((prevOffers) => prevOffers.filter((offer) => offer.id !== id));
+  const handleDeleteOffer = (id: string) => {
+    deleteOfferMutation.mutate(id);
   };
 
-  const filteredMovies = movies.filter(
+  if (moviesLoading || offersLoading) {
+    return <div>Loading...</div>;
+  }
+
+  const filteredMovies = movies?.filter(
     (movie) => movie.status === "상영 예정" || movie.status === "상영중"
   );
-  const filteredOffers = offers.filter((offer) => {
-    const movie = movies.find((movie) => movie.id === offer.movieId);
+
+  const filteredOffers = offers?.filter((offer) => {
+    const movie = movies?.find((movie) => movie.id === offer.movieId);
     return (
       movie && movie.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -446,10 +489,10 @@ const AddOffer: React.FC = () => {
       </SearchContainer>
 
       <OfferListContainer>
-        {filteredOffers.map((offer) => (
+        {filteredOffers?.map((offer) => (
           <OfferItem key={offer.id}>
             <StyledTitle>
-              {movies.find((movie) => movie.id === offer.movieId)?.title}
+              {movies?.find((movie) => movie.id === offer.movieId)?.title}
             </StyledTitle>
             <Section style={{ borderLeft: "1px, solid , black" }}>
               제공 주차
@@ -493,7 +536,7 @@ const AddOffer: React.FC = () => {
                     key={`${offer.id}-image-${i}`} // 고유한 key 부여
                     src={image}
                     alt={`특전 이미지 ${i + 1}`}
-                    style={{ width: "140px", height: "140px" }}
+                    style={{ width: "100px", height: "100px" }}
                   />
                 ))}
               </ImageGrid>
@@ -514,7 +557,7 @@ const AddOffer: React.FC = () => {
           <form onSubmit={handleSubmit}>
             <Select value={selectedMovie} onChange={handleSelectChange}>
               <option value="">영화를 선택하세요</option>
-              {filteredMovies.map((movie) => (
+              {filteredMovies?.map((movie) => (
                 <option key={movie.id} value={movie.id}>
                   {movie.title}
                 </option>
