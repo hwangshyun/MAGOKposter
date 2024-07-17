@@ -10,7 +10,14 @@ interface SavedMovie {
   date: string;
   status: string;
   rating: number;
-  user_id: string; // 사용자 ID 필드 추가
+  user_id: string;
+}
+
+interface LocationData {
+  id: string;
+  location: string;
+  input_count: number;
+  type: string;
 }
 
 const CenterSection = styled.div`
@@ -79,13 +86,12 @@ const MovieInfo = styled.div`
 `;
 const StyledH2 = styled.h2`
   font-weight: lighter;
-  color: white;
   margin: 20px 0px;
 `;
 const PosterLocation = styled.div`
-  width: 40%;
+  width: auto;
   margin-top: 20px;
-  padding: 0px 0px 20px 10px;
+  padding: 0px 10px 20px 10px;
   border: 1px solid #ffffff6f;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -93,16 +99,20 @@ const PosterLocation = styled.div`
   align-items: center;
 `;
 
-const StyledInput = styled.input<{ isDoubleClicked: boolean; isAssigned: boolean }>`
+const StyledInput = styled.input<{
+  isDoubleClicked: boolean;
+  isAssigned: boolean;
+}>`
   margin-left: 5px;
   width: 130px;
   padding: 4px;
-  background-color: ${({ isDoubleClicked, isAssigned }) => 
-    isAssigned ? 'yellow' : isDoubleClicked ? 'orange' : '#ffffffe6'};
+  background-color: ${({ isDoubleClicked, isAssigned }) =>
+    isAssigned ? "yellow" : isDoubleClicked ? "orange" : "#ffffffe6"};
   border: 1px solid #0000009d;
   border-radius: 5px;
   text-align: center;
-  font-weight: ${({ isDoubleClicked }) => (isDoubleClicked ? 'bold' : 'normal')};
+  font-weight: ${({ isDoubleClicked }) =>
+    isDoubleClicked ? "bold" : "normal"};
 `;
 
 const StyledButton = styled.button`
@@ -123,30 +133,113 @@ const StyledButton = styled.button`
   }
 `;
 
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: scroll;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const ModalContent = styled.div`
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 40%;
+  height: 80%;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+`;
+
+const Input = styled.input`
+  margin-bottom: 10px;
+  width: 130px;
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+`;
+
+const AddButton = styled.button`
+  background-color: #4caf50;
+  border: none;
+  padding: 8px;
+  margin: 3px;
+  color: white;
+  padding: 5px 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  border-radius: 8px;
+  cursor: pointer;
+`;
+
+const RemoveButton = styled.button`
+  background-color: #f44336;
+  border: none;
+  color: white;
+  padding: 5px 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  border-radius: 8px;
+  cursor: pointer;
+`;
+
 const PosterManager: React.FC = () => {
-  const { user } = useAuth(); // 현재 로그인된 사용자 정보 가져오기
+  const { user } = useAuth();
   const [savedMovies, setSavedMovies] = useState<SavedMovie[]>([]);
   const [ratings, setRatings] = useState<{ [id: string]: number }>({});
-  const [nowShowingInputValues, setNowShowingInputValues] = useState<{ [key: string]: string }>(() => {
+  const [nowShowingInputValues, setNowShowingInputValues] = useState<{
+    [key: string]: string;
+  }>(() => {
     const storedValues = localStorage.getItem("nowShowingInputValues");
     return storedValues ? JSON.parse(storedValues) : {};
   });
 
-  const [upcomingInputValues, setUpcomingInputValues] = useState<{ [key: string]: string }>(() => {
+  const [upcomingInputValues, setUpcomingInputValues] = useState<{
+    [key: string]: string;
+  }>(() => {
     const storedValues = localStorage.getItem("upcomingInputValues");
     return storedValues ? JSON.parse(storedValues) : {};
   });
 
-  const [doubleClickedInputs, setDoubleClickedInputs] = useState<{ [key: string]: boolean }>(() => {
+  const [doubleClickedInputs, setDoubleClickedInputs] = useState<{
+    [key: string]: boolean;
+  }>(() => {
     const storedValues = localStorage.getItem("doubleClickedInputs");
     return storedValues ? JSON.parse(storedValues) : {};
   });
 
-  const [assignedInputs, setAssignedInputs] = useState<{ [key: string]: boolean }>({});
+  const [assignedInputs, setAssignedInputs] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [nowShowingLocations, setNowShowingLocations] = useState<
+    LocationData[]
+  >([]);
+  const [upcomingLocations, setUpcomingLocations] = useState<LocationData[]>(
+    []
+  );
+  const [locationInputCounts, setLocationInputCounts] = useState<{
+    [key: string]: number;
+  }>({});
+  const [newLocation, setNewLocation] = useState<string>("");
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [currentType, setCurrentType] = useState<string>("");
 
   useEffect(() => {
     if (user) {
       fetchSavedMovies(user.id);
+      fetchLocations(user.id);
     }
   }, [user]);
 
@@ -155,15 +248,24 @@ const PosterManager: React.FC = () => {
   }, [ratings]);
 
   useEffect(() => {
-    localStorage.setItem("nowShowingInputValues", JSON.stringify(nowShowingInputValues));
+    localStorage.setItem(
+      "nowShowingInputValues",
+      JSON.stringify(nowShowingInputValues)
+    );
   }, [nowShowingInputValues]);
 
   useEffect(() => {
-    localStorage.setItem("upcomingInputValues", JSON.stringify(upcomingInputValues));
+    localStorage.setItem(
+      "upcomingInputValues",
+      JSON.stringify(upcomingInputValues)
+    );
   }, [upcomingInputValues]);
 
   useEffect(() => {
-    localStorage.setItem("doubleClickedInputs", JSON.stringify(doubleClickedInputs));
+    localStorage.setItem(
+      "doubleClickedInputs",
+      JSON.stringify(doubleClickedInputs)
+    );
   }, [doubleClickedInputs]);
 
   const fetchSavedMovies = async (userId: string) => {
@@ -180,6 +282,31 @@ const PosterManager: React.FC = () => {
         initialRatings[movie.id] = movie.rating || 0;
       });
       setRatings(initialRatings);
+    }
+  };
+
+  const fetchLocations = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("posterlocations")
+      .select("*")
+      .eq("user_id", userId);
+    if (error) {
+      console.error("Error fetching locations:", error);
+    } else {
+      const nowShowing = data.filter(
+        (loc: LocationData) => loc.type === "nowShowing"
+      );
+      const upcoming = data.filter(
+        (loc: LocationData) => loc.type === "upcoming"
+      );
+      setNowShowingLocations(nowShowing);
+      setUpcomingLocations(upcoming);
+
+      const initialInputCounts: { [key: string]: number } = {};
+      data.forEach((location: LocationData) => {
+        initialInputCounts[location.location] = location.input_count;
+      });
+      setLocationInputCounts(initialInputCounts);
     }
   };
 
@@ -214,7 +341,11 @@ const PosterManager: React.FC = () => {
     return stars;
   };
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>, key: string, type: string) => {
+  const handleInputChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    key: string,
+    type: string
+  ) => {
     if (type === "nowShowing") {
       setNowShowingInputValues({
         ...nowShowingInputValues,
@@ -241,25 +372,14 @@ const PosterManager: React.FC = () => {
       .filter((movie) => movie.status === status)
       .sort((a, b) => (ratings[b.id] || 0) - (ratings[a.id] || 0));
 
-    const newInputValues = type === "nowShowing" ? { ...nowShowingInputValues } : { ...upcomingInputValues };
-    const inputIds = type === "nowShowing"
-      ? [
-          "4층",
-          "4층 뒷쪽",
-          "4-6층 에스컬레이터",
-          "6층 2관옆",
-          "6층 3관 복도",
-          "6-8층 에스컬레이터",
-          "8층",
-        ]
-      : [
-          "5층 에스컬레이터 앞",
-          "1관 퇴장문 앞",
-          "사무실 앞",
-          "7층 에스컬레이터 앞",
-          "4관 퇴장문 앞",
-          "천조창고 앞",
-        ];
+    const newInputValues =
+      type === "nowShowing"
+        ? { ...nowShowingInputValues }
+        : { ...upcomingInputValues };
+    const inputIds =
+      type === "nowShowing"
+        ? nowShowingLocations.map((location) => location.location)
+        : upcomingLocations.map((location) => location.location);
 
     const movieCounts: { [title: string]: number } = {};
     movies.forEach((movie) => {
@@ -271,10 +391,9 @@ const PosterManager: React.FC = () => {
     inputIds.forEach((inputId) => {
       const lineMovies: Set<string> = new Set();
 
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 100; i++) {
         const inputKey = `${inputId}-${i}`;
         if (newInputValues[inputKey]) {
-          // 이미 값이 있으면 넘어감
           continue;
         }
 
@@ -291,7 +410,7 @@ const PosterManager: React.FC = () => {
           }
         }
 
-        if (!movieAssigned) break; // 더 이상 배치할 영화가 없으면 중단
+        if (!movieAssigned) break;
       }
     });
 
@@ -312,7 +431,10 @@ const PosterManager: React.FC = () => {
           updatedState[key] = false;
         });
         localStorage.removeItem("nowShowingInputValues");
-        localStorage.setItem("doubleClickedInputs", JSON.stringify(updatedState));
+        localStorage.setItem(
+          "doubleClickedInputs",
+          JSON.stringify(updatedState)
+        );
         return updatedState;
       });
     } else {
@@ -323,7 +445,10 @@ const PosterManager: React.FC = () => {
           updatedState[key] = false;
         });
         localStorage.removeItem("upcomingInputValues");
-        localStorage.setItem("doubleClickedInputs", JSON.stringify(updatedState));
+        localStorage.setItem(
+          "doubleClickedInputs",
+          JSON.stringify(updatedState)
+        );
         return updatedState;
       });
     }
@@ -332,21 +457,37 @@ const PosterManager: React.FC = () => {
 
   const handleSaveDefaults = (type: string) => {
     if (type === "nowShowing") {
-      localStorage.setItem("defaultNowShowingInputValues", JSON.stringify(nowShowingInputValues));
-      localStorage.setItem("defaultDoubleClickedInputsNowShowing", JSON.stringify(doubleClickedInputs));
+      localStorage.setItem(
+        "defaultNowShowingInputValues",
+        JSON.stringify(nowShowingInputValues)
+      );
+      localStorage.setItem(
+        "defaultDoubleClickedInputsNowShowing",
+        JSON.stringify(doubleClickedInputs)
+      );
     } else {
-      localStorage.setItem("defaultUpcomingInputValues", JSON.stringify(upcomingInputValues));
-      localStorage.setItem("defaultDoubleClickedInputsUpcoming", JSON.stringify(doubleClickedInputs));
+      localStorage.setItem(
+        "defaultUpcomingInputValues",
+        JSON.stringify(upcomingInputValues)
+      );
+      localStorage.setItem(
+        "defaultDoubleClickedInputsUpcoming",
+        JSON.stringify(doubleClickedInputs)
+      );
     }
   };
 
   const handleLoadDefaults = (type: string) => {
     if (type === "nowShowing") {
-      const storedDefaults = localStorage.getItem("defaultNowShowingInputValues");
+      const storedDefaults = localStorage.getItem(
+        "defaultNowShowingInputValues"
+      );
       if (storedDefaults) {
         setNowShowingInputValues(JSON.parse(storedDefaults));
       }
-      const storedDoubleClicked = localStorage.getItem("defaultDoubleClickedInputsNowShowing");
+      const storedDoubleClicked = localStorage.getItem(
+        "defaultDoubleClickedInputsNowShowing"
+      );
       if (storedDoubleClicked) {
         setDoubleClickedInputs(JSON.parse(storedDoubleClicked));
       }
@@ -355,12 +496,150 @@ const PosterManager: React.FC = () => {
       if (storedDefaults) {
         setUpcomingInputValues(JSON.parse(storedDefaults));
       }
-      const storedDoubleClicked = localStorage.getItem("defaultDoubleClickedInputsUpcoming");
+      const storedDoubleClicked = localStorage.getItem(
+        "defaultDoubleClickedInputsUpcoming"
+      );
       if (storedDoubleClicked) {
         setDoubleClickedInputs(JSON.parse(storedDoubleClicked));
       }
     }
   };
+
+  const handleAddLocation = async () => {
+    const { data, error } = await supabase
+      .from("posterlocations")
+      .insert([
+        {
+          location: newLocation,
+          input_count: 1,
+          user_id: user?.id,
+          type: currentType,
+        },
+      ])
+      .select();
+    if (error) {
+      console.error("Error adding location:", error);
+    } else {
+      if (currentType === "nowShowing") {
+        setNowShowingLocations([...nowShowingLocations, data[0]]);
+      } else {
+        setUpcomingLocations([...upcomingLocations, data[0]]);
+      }
+      setLocationInputCounts({ ...locationInputCounts, [newLocation]: 1 });
+      setNewLocation("");
+    }
+  };
+
+  const handleAddInput = (location: string) => {
+    setLocationInputCounts({
+      ...locationInputCounts,
+      [location]: (locationInputCounts[location] || 1) + 1,
+    });
+  };
+
+  const handleRemoveLocation = async (locationId: string) => {
+    const { error } = await supabase
+      .from("posterlocations")
+      .delete()
+      .eq("id", locationId);
+    if (error) {
+      console.error("Error removing location:", error);
+    } else {
+      if (currentType === "nowShowing") {
+        setNowShowingLocations(
+          nowShowingLocations.filter((loc) => loc.id !== locationId)
+        );
+      } else {
+        setUpcomingLocations(
+          upcomingLocations.filter((loc) => loc.id !== locationId)
+        );
+      }
+      const { [locationId]: _, ...newLocationInputCounts } =
+        locationInputCounts;
+      setLocationInputCounts(newLocationInputCounts);
+    }
+  };
+
+  const handleSave = () => {
+    const locationsToSave =
+      currentType === "nowShowing" ? nowShowingLocations : upcomingLocations;
+    locationsToSave.forEach(async (location) => {
+      const { error } = await supabase
+        .from("posterlocations")
+        .update({ input_count: locationInputCounts[location.location] })
+        .eq("id", location.id);
+      if (error) {
+        console.error("Error updating location:", error);
+      }
+    });
+    setShowModal(false);
+  };
+
+  const openModal = (type: string) => {
+    setCurrentType(type);
+    setShowModal(true);
+  };
+
+  const renderMovieList = (movies: SavedMovie[], status: string) => (
+    <StyledList>
+      {movies
+        .filter((movie) => movie.status === status)
+        .map((movie) => (
+          <StyledListItem key={movie.id}>
+            <div>
+              <MovieTitle>{movie.title}</MovieTitle>
+              <MovieInfo>
+                {movie.date} 개봉 <br />
+                {movie.count} 장
+              </MovieInfo>
+            </div>
+            <div>{renderRatingStars(movie.id)}</div>
+          </StyledListItem>
+        ))}
+    </StyledList>
+  );
+
+  const renderLocationInputs = (
+    locations: LocationData[],
+    inputValues: { [key: string]: string },
+    type: string
+  ) => (
+    <div>
+      {locations.map((location) => (
+        <div key={location.id}>
+          <h4
+            style={{
+              margin: "5px",
+              color: "#ffffff",
+              fontWeight: "normal",
+            }}
+          >
+            {location.location}
+          </h4>
+          {[...Array(locationInputCounts[location.location] || 1)].map(
+            (_, i) => (
+              <StyledInput
+                key={i}
+                type="text"
+                value={inputValues[`${location.location}-${i}`] || ""}
+                onChange={(e) =>
+                  handleInputChange(e, `${location.location}-${i}`, type)
+                }
+                onDoubleClick={() =>
+                  handleInputDoubleClick(`${location.location}-${i}`)
+                }
+                isDoubleClicked={
+                  !!doubleClickedInputs[`${location.location}-${i}`]
+                }
+                isAssigned={!!assignedInputs[`${location.location}-${i}`]}
+              />
+            )
+          )}
+          <br />
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <CenterSection>
@@ -368,111 +647,138 @@ const PosterManager: React.FC = () => {
         <StyledSection>
           <StyeldComingsoon>
             <StyledHeader>상영 예정작</StyledHeader>
-            <StyledList>
-              {savedMovies
-                .filter((movie) => movie.status === "상영 예정")
-                .map((movie) => (
-                  <StyledListItem key={movie.id}>
-                    <div>
-                      <MovieTitle>{movie.title}</MovieTitle>
-                      <MovieInfo>
-                        {movie.date} 개봉 <br />
-                        {movie.count} 장
-                      </MovieInfo>
-                    </div>
-                    <div>{renderRatingStars(movie.id)}</div>
-                  </StyledListItem>
-                ))}
-            </StyledList>
+            {renderMovieList(savedMovies, "상영 예정")}
           </StyeldComingsoon>
           <StyeldNowShowing>
             <StyledHeader>상영중</StyledHeader>
-            <StyledList>
-              {savedMovies
-                .filter((movie) => movie.status === "상영중")
-                .map((movie) => (
-                  <StyledListItem key={movie.id}>
-                    <div>
-                      <MovieTitle>{movie.title}</MovieTitle>
-                      <MovieInfo>
-                        {movie.date} 개봉 <br />
-                        {movie.count} 장
-                      </MovieInfo>
-                    </div>
-                    <div>{renderRatingStars(movie.id)}</div>
-                  </StyledListItem>
-                ))}
-            </StyledList>
+            {renderMovieList(savedMovies, "상영중")}
           </StyeldNowShowing>
         </StyledSection>
         <PosterLocation>
           <CenterSection>
             <StyledH2>Now Showing</StyledH2>
-            <StyledButton onClick={() => handleButtonClick("상영중", "nowShowing")}>영화 배치</StyledButton>
-            <StyledButton onClick={() => handleClearInputs("nowShowing")}>비우기</StyledButton>
-            <StyledButton onClick={() => handleSaveDefaults("nowShowing")}>저장하기</StyledButton>
-            <StyledButton onClick={() => handleLoadDefaults("nowShowing")}>불러오기</StyledButton>
-            <div>
-              {[
-                "4층",
-                "4층 뒷쪽",
-                "4-6층 에스컬레이터",
-                "6층 2관옆",
-                "6층 3관 복도",
-                "6-8층 에스컬레이터",
-                "8층",
-              ].map((floor, index) => (
-                <div key={index}>
-                  <h4 style={{ margin: "5px", color: "#ffffff", fontWeight: "normal" }}>{floor}</h4>
-                  {[0, 1, 2].map((i) => (
-                    <StyledInput
-                      key={i}
-                      type="text"
-                      value={nowShowingInputValues[`${floor}-${i}`] || ""}
-                      onChange={(e) => handleInputChange(e, `${floor}-${i}`, "nowShowing")}
-                      onDoubleClick={() => handleInputDoubleClick(`${floor}-${i}`)}
-                      isDoubleClicked={!!doubleClickedInputs[`${floor}-${i}`]}
-                      isAssigned={!!assignedInputs[`${floor}-${i}`]}
-                    />
-                  ))}
-                  <br />
-                </div>
-              ))}
-            </div>
+            <StyledButton
+              onClick={() => handleButtonClick("상영중", "nowShowing")}
+            >
+              영화 배치
+            </StyledButton>
+            <StyledButton onClick={() => handleClearInputs("nowShowing")}>
+              비우기
+            </StyledButton>
+            <StyledButton onClick={() => handleSaveDefaults("nowShowing")}>
+              저장하기
+            </StyledButton>
+            <StyledButton onClick={() => handleLoadDefaults("nowShowing")}>
+              불러오기
+            </StyledButton>
+            <StyledButton onClick={() => openModal("nowShowing")}>
+              위치 수정
+            </StyledButton>
+            {renderLocationInputs(
+              nowShowingLocations,
+              nowShowingInputValues,
+              "nowShowing"
+            )}
             <StyledH2>Coming Soon</StyledH2>
-            <StyledButton onClick={() => handleButtonClick("상영 예정", "upcoming")}>영화 배치</StyledButton>
-            <StyledButton onClick={() => handleClearInputs("upcoming")}>비우기</StyledButton>
-            <StyledButton onClick={() => handleSaveDefaults("upcoming")}>저장하기</StyledButton>
-            <StyledButton onClick={() => handleLoadDefaults("upcoming")}>불러오기</StyledButton>
-            <div>
-              {[
-                "5층 에스컬레이터 앞",
-                "1관 퇴장문 앞",
-                "사무실 앞",
-                "7층 에스컬레이터 앞",
-                "4관 퇴장문 앞",
-                "천조창고 앞",
-              ].map((location, index) => (
-                <div key={index}>
-                  <h4 style={{ margin: "5px", color: "#ffffff", fontWeight: "normal" }}>{location}</h4>
-                  {[0, 1, 2].map((i) => (
-                    <StyledInput
-                      key={i}
-                      type="text"
-                      value={upcomingInputValues[`${location}-${i}`] || ""}
-                      onChange={(e) => handleInputChange(e, `${location}-${i}`, "upcoming")}
-                      onDoubleClick={() => handleInputDoubleClick(`${location}-${i}`)}
-                      isDoubleClicked={!!doubleClickedInputs[`${location}-${i}`]}
-                      isAssigned={!!assignedInputs[`${location}-${i}`]}
-                    />
-                  ))}
-                  <br />
-                </div>
-              ))}
-            </div>
+            <StyledButton
+              onClick={() => handleButtonClick("상영 예정", "upcoming")}
+            >
+              영화 배치
+            </StyledButton>
+            <StyledButton onClick={() => handleClearInputs("upcoming")}>
+              비우기
+            </StyledButton>
+            <StyledButton onClick={() => handleSaveDefaults("upcoming")}>
+              저장하기
+            </StyledButton>
+            <StyledButton onClick={() => handleLoadDefaults("upcoming")}>
+              불러오기
+            </StyledButton>
+            <StyledButton onClick={() => openModal("upcoming")}>
+              위치 수정
+            </StyledButton>
+            {renderLocationInputs(
+              upcomingLocations,
+              upcomingInputValues,
+              "upcoming"
+            )}
           </CenterSection>
         </PosterLocation>
       </AllSection>
+      {showModal && (
+        <ModalOverlay>
+          <ModalContent>
+            <h3>위치 추가</h3>
+            <Input
+              type="text"
+              value={newLocation}
+              onChange={(e) => setNewLocation(e.target.value)}
+              placeholder="새로운 위치 이름"
+            />
+            <AddButton onClick={handleAddLocation}>위치 추가</AddButton>
+            <RemoveButton onClick={() => setShowModal(false)}>
+              취소
+            </RemoveButton>
+            <StyledH2>현재 위치</StyledH2>
+            {(currentType === "nowShowing"
+              ? nowShowingLocations
+              : upcomingLocations
+            ).map((location) => (
+              <div key={location.id}>
+                <div style={{ display: "flex" }}>
+                  <h4
+                    style={{
+                      margin: "5px",
+                      color: "#000000",
+                      fontWeight: "normal",
+                    }}
+                  >
+                    {location.location}
+                  </h4>
+                  <StyledButton
+                    onClick={() => handleRemoveLocation(location.id)}
+                  >
+                    삭제
+                  </StyledButton>
+                </div>
+                {[...Array(locationInputCounts[location.location] || 1)].map(
+                  (_, i) => (
+                    <StyledInput
+                      key={i}
+                      type="text"
+                      value={
+                        (currentType === "nowShowing"
+                          ? nowShowingInputValues
+                          : upcomingInputValues)[`${location.location}-${i}`] ||
+                        ""
+                      }
+                      onChange={(e) =>
+                        handleInputChange(
+                          e,
+                          `${location.location}-${i}`,
+                          currentType
+                        )
+                      }
+                      onDoubleClick={() =>
+                        handleInputDoubleClick(`${location.location}-${i}`)
+                      }
+                      isDoubleClicked={
+                        !!doubleClickedInputs[`${location.location}-${i}`]
+                      }
+                      isAssigned={!!assignedInputs[`${location.location}-${i}`]}
+                    />
+                  )
+                )}
+                <StyledButton onClick={() => handleAddInput(location.location)}>
+                  인풋창 추가
+                </StyledButton>
+                <br />
+              </div>
+            ))}
+            <AddButton onClick={handleSave}>저장</AddButton>
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </CenterSection>
   );
 };
