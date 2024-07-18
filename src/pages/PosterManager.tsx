@@ -166,7 +166,8 @@ const Input = styled.input`
 `;
 
 const AddButton = styled.button`
-  background-color: #4caf50;
+  background-color: #4d684e;
+  width: 80px;
   border: none;
   padding: 8px;
   margin: 3px;
@@ -182,17 +183,22 @@ const AddButton = styled.button`
 `;
 
 const RemoveButton = styled.button`
-  background-color: #f44336;
-  border: none;
+  width: 50px;
+  background-color: #000000ad;
+  border-radius: 5px;
+  border: 1px solid #ffffffb2;
+  padding: 8px;
+  margin: 3px;
+  margin-bottom: 10px;
   color: white;
-  padding: 5px 10px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
-  border-radius: 8px;
+  font-weight: medium;
   cursor: pointer;
+  transition: 0.3s;
+  &:hover {
+    background-color: none;
+    transform: scale(1.1);
+    font-weight: bold;
+  }
 `;
 
 const PosterManager: React.FC = () => {
@@ -770,7 +776,7 @@ const PosterManager: React.FC = () => {
                   )
                 )}
                 <StyledButton onClick={() => handleAddInput(location.location)}>
-                  인풋창 추가
+                  추가
                 </StyledButton>
                 <br />
               </div>
