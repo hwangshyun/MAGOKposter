@@ -69,7 +69,7 @@ const Notice: React.FC = () => {
       >
         {isHovered ? "윤은경대머리깎아라" : "만드는중..."}
         <HoverImage
-          src="/file.png" // 여기에 실제 이미지 경로를 넣으세요.
+          src="/file.png" 
           alt="Hover Image"
           isHovered={isHovered}
         />
