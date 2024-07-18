@@ -57,7 +57,7 @@ const Notice: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
 
   const goBack = () => {
-    navigate("/");
+    navigate("/main");
   };
 
   return (
