@@ -52,12 +52,11 @@ const OfferItem = styled.div`
   display: flex;
 `;
 
-const StyledTitle = styled.h2`
-  /* min-width: 100px; */
+const StyledTitle = styled.h4`
   margin-left: 10px;
   margin-right: 10px;
   margin-bottom: auto;
-  /* border-right: 1px solid black; */
+  font-weight: 500;
 `;
 
 const Section = styled.div`

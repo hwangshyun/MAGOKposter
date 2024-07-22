@@ -1,5 +1,5 @@
 import React, { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -68,7 +68,12 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { user, login } = useAuth();
+
+  // 로그인된 상태에서 /login 페이지에 접근하면 /main 페이지로 리디렉션
+  if (user) {
+    return <Navigate to="/main" />;
+  }
 
   const handleLogin = async (event: FormEvent) => {
     event.preventDefault();
