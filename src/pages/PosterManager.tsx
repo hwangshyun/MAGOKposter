@@ -1,205 +1,29 @@
 import React, { useState, useEffect } from "react";
-import styled from "styled-components";
 import { supabase } from "../api/supabaseClient";
 import { useAuth } from "../contexts/AuthContext";
-
-interface SavedMovie {
-  id: string;
-  title: string;
-  count: string;
-  date: string;
-  status: string;
-  rating: number;
-  user_id: string;
-}
-
-interface LocationData {
-  id: string;
-  location: string;
-  input_count: number;
-  type: string;
-}
-
-const CenterSection = styled.div`
-  justify-content: center;
-`;
-
-const AllSection = styled.div`
-  display: flex;
-  justify-content: center;
-`;
-
-const StyledSection = styled.div`
-  display: flex;
-  width: 38%;
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-`;
-
-const StyledHeader = styled.h2`
-  text-align: center;
-  margin-bottom: 20px;
-  color: white;
-  font-weight: lighter;
-`;
-
-const StyledList = styled.ul`
-  list-style-type: none;
-  padding: 0;
-`;
-
-const StyledListItem = styled.li`
-  background-color: #f9f9f9b1;
-  margin: 10px 0;
-  padding: 10px;
-  border-radius: 4px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const StyeldComingsoon = styled.div`
-  width: 50%;
-  background-color: "#ffea32f";
-  border: 1px solid #ffffff6f;
-  padding: 8px;
-  border-radius: 10px;
-  margin-right: 8px;
-`;
-const StyeldNowShowing = styled.div`
-  width: 50%;
-  background-color: #37954d1e;
-  border: 1px solid #ffffff6f;
-  padding: 10px;
-  border-radius: 10px;
-`;
-const MovieTitle = styled.div`
-  font-size: 0.8em;
-  font-weight: 500;
-  margin-bottom: 2px;
-`;
-
-const MovieInfo = styled.div`
-  font-size: 0.7em;
-`;
-const StyledH2 = styled.h2`
-  font-weight: lighter;
-  margin: 20px 0px;
-`;
-const PosterLocation = styled.div`
-  width: auto;
-  margin-top: 20px;
-  padding: 0px 10px 20px 10px;
-  border: 1px solid #ffffff6f;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background-color: #5b5b5b55;
-  align-items: center;
-`;
-
-const StyledInput = styled.input<{
-  isDoubleClicked: boolean;
-  isAssigned: boolean;
-}>`
-  margin-left: 5px;
-  width: 130px;
-  padding: 4px;
-  background-color: ${({ isDoubleClicked, isAssigned }) =>
-    isAssigned ? "yellow" : isDoubleClicked ? "orange" : "#ffffffe6"};
-  border: 1px solid #0000009d;
-  border-radius: 5px;
-  text-align: center;
-  font-weight: ${({ isDoubleClicked }) =>
-    isDoubleClicked ? "bold" : "normal"};
-`;
-
-const StyledButton = styled.button`
-  background-color: #000000ad;
-  border-radius: 5px;
-  border: 1px solid #ffffffb2;
-  padding: 8px;
-  margin: 3px;
-  margin-bottom: 10px;
-  color: white;
-  font-weight: medium;
-  cursor: pointer;
-  transition: 0.3s;
-  &:hover {
-    background-color: none;
-    transform: scale(1.1);
-    font-weight: bold;
-  }
-`;
-
-const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow-y: scroll;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
-const ModalContent = styled.div`
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 40%;
-  height: 80%;
-  overflow-y: scroll;
-  display: flex;
-  flex-direction: column;
-`;
-
-const Input = styled.input`
-  margin-bottom: 10px;
-  width: 130px;
-  padding: 4px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-`;
-
-const AddButton = styled.button`
-  background-color: #4d684e;
-  width: 80px;
-  border: none;
-  padding: 8px;
-  margin: 3px;
-  color: white;
-  padding: 5px 10px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
-  border-radius: 8px;
-  cursor: pointer;
-`;
-
-const RemoveButton = styled.button`
-  width: 50px;
-  background-color: #000000ad;
-  border-radius: 5px;
-  border: 1px solid #ffffffb2;
-  padding: 8px;
-  margin: 3px;
-  margin-bottom: 10px;
-  color: white;
-  font-weight: medium;
-  cursor: pointer;
-  transition: 0.3s;
-  &:hover {
-    background-color: none;
-    transform: scale(1.1);
-    font-weight: bold;
-  }
-`;
+import {
+  renderMovieList,
+  renderLocationInputs,
+  renderRatingStars,
+} from "../components/posterManagercomponents/UtilityFunctions";
+import { SavedMovie, LocationData } from "../types/types";
+import {
+  CenterSection,
+  AllSection,
+  StyledSection,
+  StyledHeader,
+  StyeldComingsoon,
+  StyeldNowShowing,
+  PosterLocation,
+  StyledButton,
+  ModalOverlay,
+  ModalContent,
+  Input,
+  AddButton,
+  RemoveButton,
+  StyledH2,
+  StyledInput,
+} from "../components/posterManagercomponents/StyledComponents";
 
 const PosterManager: React.FC = () => {
   const { user } = useAuth();
@@ -207,25 +31,13 @@ const PosterManager: React.FC = () => {
   const [ratings, setRatings] = useState<{ [id: string]: number }>({});
   const [nowShowingInputValues, setNowShowingInputValues] = useState<{
     [key: string]: string;
-  }>(() => {
-    const storedValues = localStorage.getItem("nowShowingInputValues");
-    return storedValues ? JSON.parse(storedValues) : {};
-  });
-
+  }>({});
   const [upcomingInputValues, setUpcomingInputValues] = useState<{
     [key: string]: string;
-  }>(() => {
-    const storedValues = localStorage.getItem("upcomingInputValues");
-    return storedValues ? JSON.parse(storedValues) : {};
-  });
-
+  }>({});
   const [doubleClickedInputs, setDoubleClickedInputs] = useState<{
     [key: string]: boolean;
-  }>(() => {
-    const storedValues = localStorage.getItem("doubleClickedInputs");
-    return storedValues ? JSON.parse(storedValues) : {};
-  });
-
+  }>({});
   const [assignedInputs, setAssignedInputs] = useState<{
     [key: string]: boolean;
   }>({});
@@ -327,26 +139,6 @@ const PosterManager: React.FC = () => {
     }
   };
 
-  const renderRatingStars = (id: string) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <span
-          key={i}
-          onClick={() => handleRating(id, i)}
-          style={{
-            cursor: "pointer",
-            color: i <= (ratings[id] || 0) ? "gold" : "gray",
-            fontSize: "14px",
-          }}
-        >
-          ★
-        </span>
-      );
-    }
-    return stars;
-  };
-
   const handleInputChange = (
     event: React.ChangeEvent<HTMLInputElement>,
     key: string,
@@ -394,31 +186,33 @@ const PosterManager: React.FC = () => {
 
     const newAssignedInputs: { [key: string]: boolean } = {};
 
-    inputIds.forEach((inputId) => {
-      const lineMovies: Set<string> = new Set();
+    let inputIndex = 0;
 
-      for (let i = 0; i < 100; i++) {
-        const inputKey = `${inputId}-${i}`;
+    while (inputIndex < 100) {
+      let anyMovieAssigned = false;
+      inputIds.forEach((inputId) => {
+        const inputKey = `${inputId}-${inputIndex}`;
         if (newInputValues[inputKey]) {
-          continue;
+          return;
         }
 
-        let movieAssigned = false;
-
         for (const movie of movies) {
-          if (movieCounts[movie.title] > 0 && !lineMovies.has(movie.title)) {
-            lineMovies.add(movie.title);
+          if (movieCounts[movie.title] > 0) {
             newInputValues[inputKey] = movie.title;
             newAssignedInputs[inputKey] = true;
             movieCounts[movie.title] -= 1;
-            movieAssigned = true;
+            anyMovieAssigned = true;
             break;
           }
         }
+      });
 
-        if (!movieAssigned) break;
+      if (!anyMovieAssigned) {
+        break;
       }
-    });
+
+      inputIndex += 1;
+    }
 
     if (type === "nowShowing") {
       setNowShowingInputValues(newInputValues);
@@ -586,78 +380,21 @@ const PosterManager: React.FC = () => {
     setShowModal(true);
   };
 
-  const renderMovieList = (movies: SavedMovie[], status: string) => (
-    <StyledList>
-      {movies
-        .filter((movie) => movie.status === status)
-        .map((movie) => (
-          <StyledListItem key={movie.id}>
-            <div>
-              <MovieTitle>{movie.title}</MovieTitle>
-              <MovieInfo>
-                {movie.date} 개봉 <br />
-                {movie.count} 장
-              </MovieInfo>
-            </div>
-            <div>{renderRatingStars(movie.id)}</div>
-          </StyledListItem>
-        ))}
-    </StyledList>
-  );
-
-  const renderLocationInputs = (
-    locations: LocationData[],
-    inputValues: { [key: string]: string },
-    type: string
-  ) => (
-    <div>
-      {locations.map((location) => (
-        <div key={location.id}>
-          <h4
-            style={{
-              margin: "5px",
-              color: "#ffffff",
-              fontWeight: "normal",
-            }}
-          >
-            {location.location}
-          </h4>
-          {[...Array(locationInputCounts[location.location] || 1)].map(
-            (_, i) => (
-              <StyledInput
-                key={i}
-                type="text"
-                value={inputValues[`${location.location}-${i}`] || ""}
-                onChange={(e) =>
-                  handleInputChange(e, `${location.location}-${i}`, type)
-                }
-                onDoubleClick={() =>
-                  handleInputDoubleClick(`${location.location}-${i}`)
-                }
-                isDoubleClicked={
-                  !!doubleClickedInputs[`${location.location}-${i}`]
-                }
-                isAssigned={!!assignedInputs[`${location.location}-${i}`]}
-              />
-            )
-          )}
-          <br />
-        </div>
-      ))}
-    </div>
-  );
-
   return (
     <CenterSection>
       <AllSection>
         <StyledSection>
           <StyeldComingsoon>
             <StyledHeader>상영 예정작</StyledHeader>
-            {renderMovieList(savedMovies, "상영 예정")}
+            {renderMovieList(savedMovies, "상영 예정", (id) =>
+              renderRatingStars(id, ratings, handleRating)
+            )}
           </StyeldComingsoon>
           <StyeldNowShowing>
             <StyledHeader>상영중</StyledHeader>
-            {renderMovieList(savedMovies, "상영중")}
+            {renderMovieList(savedMovies, "상영중", (id) =>
+              renderRatingStars(id, ratings, handleRating)
+            )}
           </StyeldNowShowing>
         </StyledSection>
         <PosterLocation>
@@ -683,7 +420,13 @@ const PosterManager: React.FC = () => {
             {renderLocationInputs(
               nowShowingLocations,
               nowShowingInputValues,
-              "nowShowing"
+              "nowShowing",
+              handleInputChange,
+              handleInputDoubleClick,
+              doubleClickedInputs,
+              assignedInputs,
+              handleAddInput,
+              locationInputCounts
             )}
             <StyledH2>Coming Soon</StyledH2>
             <StyledButton
@@ -706,7 +449,13 @@ const PosterManager: React.FC = () => {
             {renderLocationInputs(
               upcomingLocations,
               upcomingInputValues,
-              "upcoming"
+              "upcoming",
+              handleInputChange,
+              handleInputDoubleClick,
+              doubleClickedInputs,
+              assignedInputs,
+              handleAddInput,
+              locationInputCounts
             )}
           </CenterSection>
         </PosterLocation>
@@ -776,7 +525,7 @@ const PosterManager: React.FC = () => {
                   )
                 )}
                 <StyledButton onClick={() => handleAddInput(location.location)}>
-                  추가
+                  인풋창 추가
                 </StyledButton>
                 <br />
               </div>
