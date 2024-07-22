@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { supabase } from "../../api/supabaseClient";
 import { useAuth } from "../../contexts/AuthContext";
+import Loading from "../Loading"; // 로딩 컴포넌트 임포트
 
 const Select = styled.select`
   margin: 10px 0;
@@ -460,7 +461,7 @@ const AddOffer: React.FC = () => {
   };
 
   if (moviesLoading || offersLoading) {
-    return <div>Loading...</div>;
+    return <Loading />; // 로딩 중일 때 로딩 컴포넌트를 표시합니다.
   }
 
   const filteredMovies = movies?.filter(
