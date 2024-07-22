@@ -64,7 +64,7 @@ export const renderLocationInputs = (
       <div key={location.id}>
         <h4
           style={{
-            margin: "5px",
+            margin: "8px",
             color: "#ffffff",
             fontWeight: "normal",
           }}
@@ -82,7 +82,7 @@ export const renderLocationInputs = (
             isAssigned={!!assignedInputs[`${location.location}-${i}`]}
           />
         ))}
-        <StyledButton onClick={() => handleAddInput(location.location)}>
+        <StyledButton style={{display:"none"}} onClick={() => handleAddInput(location.location)}>
           인풋창 추가
         </StyledButton>
         <br />

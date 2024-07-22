@@ -19,10 +19,12 @@
     ModalOverlay,
     ModalContent,
     Input,
-    AddButton,
-    RemoveButton,
     StyledH2,
     StyledInput,
+    ModalSaveButton,
+    ModalDeleteButton,
+    ModalStyledH2,
+    ModalAddButton,
   } from "../components/posterManagercomponents/StyledComponents";
 
   const PosterManager: React.FC = () => {
@@ -467,17 +469,15 @@
           <ModalOverlay>
             <ModalContent>
               <h3>위치 추가</h3>
+              <div style={{display:"flex"}}>
               <Input
                 type="text"
                 value={newLocation}
                 onChange={(e) => setNewLocation(e.target.value)}
                 placeholder="새로운 위치 이름"
               />
-              <AddButton onClick={handleAddLocation}>위치 추가</AddButton>
-              <RemoveButton onClick={() => setShowModal(false)}>
-                취소
-              </RemoveButton>
-              <StyledH2>현재 위치</StyledH2>
+              <ModalAddButton onClick={handleAddLocation}>위치 추가</ModalAddButton></div>
+              <ModalStyledH2>현재 위치</ModalStyledH2>
               {(currentType === "nowShowing"
                 ? nowShowingLocations
                 : upcomingLocations
@@ -493,11 +493,11 @@
                     >
                       {location.location}
                     </h4>
-                    <StyledButton
+                    <ModalDeleteButton
                       onClick={() => handleRemoveLocation(location.id)}
                     >
                       삭제
-                    </StyledButton>
+                    </ModalDeleteButton>
                   </div>
                   {[...Array(locationInputCounts[location.location] || 1)].map(
                     (_, i) => (
@@ -533,7 +533,7 @@
                   <br />
                 </div>
               ))}
-              <AddButton onClick={handleSave}>저장</AddButton>
+              <ModalSaveButton onClick={handleSave}>저장</ModalSaveButton>
             </ModalContent>
           </ModalOverlay>
         )}

@@ -69,13 +69,14 @@ export const MovieInfo = styled.div`
 
 export const StyledH2 = styled.h2`
   font-weight: lighter;
+  color: white;
   margin: 20px 0px;
 `;
 
 export const PosterLocation = styled.div`
-  width: 40%;
+  width: auto;
   margin-top: 20px;
-  padding: 0px 0px 20px 10px;
+  padding: 0px 20px 20px 10px;
   border: 1px solid #ffffff6f;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -102,7 +103,7 @@ export const StyledInput = styled.input<{
 export const StyledButton = styled.button`
   background-color: #000000ad;
   border-radius: 5px;
-  border: 1px solid #ffffffb2;
+  border: 1px solid #ffffff6a;
   padding: 8px;
   margin: 3px;
   margin-bottom: 10px;
@@ -123,19 +124,18 @@ export const ModalOverlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  overflow-y: scroll;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.768);
   display: flex;
   justify-content: center;
   align-items: center;
 `;
 
 export const ModalContent = styled.div`
-  background: white;
+  background: #ffffffdc;
   padding: 20px;
   border-radius: 8px;
-  width: 40%;
-  height: 80%;
+  width: auto;
+  height: 85%;
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
@@ -144,37 +144,69 @@ export const ModalContent = styled.div`
 export const Input = styled.input`
   margin-bottom: 10px;
   width: 130px;
-  padding: 4px;
+  padding: 5px;
   border-radius: 4px;
   border: 1px solid #ddd;
 `;
-
-export const AddButton = styled.button`
-  background-color: #4caf50;
-  border: none;
-  padding: 8px;
-  margin: 3px;
+export const ModalAddButton = styled.button`
+  background-color: #010101ac;
+  border-radius: 5px;
+  border: 1px solid #ffffffb2;
+  padding: 7px;
+  margin-left: 5px;
+  width: auto;
+  height: auto;
+  margin-bottom: 10px;
   color: white;
-  padding: 5px 10px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
-  border-radius: 8px;
+  font-weight: medium;
   cursor: pointer;
+  &:hover {
+    background-color: none;
+    font-weight: bold;
+  }
 `;
 
-export const RemoveButton = styled.button`
-  background-color: #f44336;
-  border: none;
+export const ModalSaveButton = styled.button`
+  background-color: #000000ac;
+  border-radius: 5px;
+  border: 1px solid #ffffffb2;
+  padding: 7px;
+  margin-left: 5px;
+  width: 50px;
+  height: auto;
+  margin-top: auto;
+  margin-left: auto;
   color: white;
-  padding: 5px 10px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
-  border-radius: 8px;
+  font-weight: medium;
   cursor: pointer;
+  transition: 0.8s;
+  &:hover {
+    background-color: #008000b1;
+    transform: scale(1.5);
+    font-weight: bold;
+  }
+`;
+
+export const ModalDeleteButton = styled.button`
+  background-color: #b01919ac;
+  border-radius: 5px;
+  border: 1px solid #ffffff6a;
+  padding: 1px 5px 1px 5px;
+  margin-left: 3px;
+  width: 50px;
+  color: white;
+  font-weight: medium;
+  cursor: pointer;
+  transition: 0.3s;
+  &:hover {
+    background-color: none;
+    transform: scale(1.1);
+    font-weight: bold;
+  }
+`;
+
+export const ModalStyledH2 = styled.h2`
+  font-weight: lighter;
+  color: #000000;
+  margin: 20px 0px;
 `;
